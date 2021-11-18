@@ -1,25 +1,39 @@
-function DOMTree (selector) {
-
-    const current = selector; 
+function DOMTree (current, View) {
+    
     const parent = current.parentElement;
     const child = current.firstElementChild;
-    const prevSibling = current.previousElementSibling;
-    const nextSibling = current.nextElementSibling;
+    const psibling = current.previousElementSibling;
+    const nsibling = current.nextElementSibling;
+    
+    View.navigationTop(parent ? false : true);
+    View.navigationBottom(child ? false : true);
+    View.navigationLeft(psibling ? false : true);
+    View.navigationRight(nsibling ? false : true);
 
     return {
-        current: current,
         parent: parent,
         child: child,
-        prevSibling: prevSibling,
-        nextSibling: nextSibling,
-    };
+        psibling: psibling,
+        nsibling: nsibling,
+
+        class(){
+            View.addClassToSelector(current);
+        },
+        
+        elements(element){
+            View.removeClassFromSelector(current);
+            return new DOMTree(this[element], View);
+        },
+
+        clear(){
+            View.removeClassFromSelector(current);
+        },
+    }; 
 }
 
-export function Seach(View){
-
-    let domTree;
-    let selectors = [];
+function Selectors(View){
     let position = 0;
+    let selectors = [];
 
     function buttons(){
         let length = selectors.length;
@@ -30,105 +44,118 @@ export function Seach(View){
             View.selectorNext(true);
         }
         
-        if (position != 0){
+        if (position > 0){
             View.selectorPrev(false);
         }else{
             View.selectorPrev(true);
         }
     }
 
-    function environment(){
-        if(domTree){
-            if (domTree.parent){
-                View.navigationTop(false);
-            }else{
-                View.navigationTop(true);
+    return {
+        newRequest(request){
+            if(request){
+                selectors = document.querySelectorAll(request);
             }
 
-            if (domTree.child){
-                View.navigationBottom(false);
-            }else{
-                View.navigationBottom(true);
-            }
+            View.addClassToSelector(selectors[position]);
 
-            if (domTree.prevSibling){
-                View.navigationLeft(false);
-            }else{
-                View.navigationLeft(true);
-            }
+            buttons();
+        },
 
-            if (domTree.nextSibling){
-                View.navigationRight(false);
-            }else{
-                View.navigationRight(true);
+        next(){
+            let prev = selectors[position];
+            View.removeClassFromSelector(prev);
+
+            position += 1;
+            let curr = selectors[position];
+
+            View.addClassToSelector(curr);
+
+            buttons();
+        },
+
+        prev(){
+            let prev = selectors[position];
+            View.removeClassFromSelector(prev);
+
+            position -= 1;
+            let curr = selectors[position];
+
+            View.addClassToSelector(curr);
+
+            buttons();
+        },
+
+        getDOM(){
+            if(selectors.length){
+                return new DOMTree(selectors[position], View);
             }
-        }
+        },
+
+        turnOffButtons(){
+            View.selectorPrev(true);
+            View.selectorNext(true);
+        },
+
+        clear(){
+            if(selectors.length){
+                View.removeClassFromSelector(selectors[position]);
+            }
+        },
     }
+}
 
-    function toggled(next){
-        View.toggleHighlight(selectors[position]);
-        View.toggleHighlight(selectors[next]);
-    }
-
-    function handleRequest(request){
-        let selectors;
-
-        if(request){
-            selectors = document.querySelectorAll(request);
-        }
-
-        return selectors ? selectors : [];
-    }
+export function Seach(View){
+    
+    let currSelector = new Selectors(View);
+    let domTree;
 
     return{
-        handleSelectors(request){
-            if(selectors.length){
-                View.toggleHighlight(selectors[position]);
-            }
-            position = 0;
+        handleSelectors(request) {
+            currSelector.clear();
 
-            selectors = handleRequest(request);
-            
-            if(selectors.length){
-                View.toggleHighlight(selectors[position]);
-                domTree = DOMTree(selectors[position]);
+            if(domTree){
+                domTree.clear();
             }
 
-            buttons();
+            currSelector = new Selectors(View);
+            currSelector.newRequest(request);
+
+            domTree = currSelector.getDOM();   
         },
 
-        nextSelector(){
-            toggled(position++);
-            domTree = DOMTree(selectors[position]);
-            buttons();
-            environment();
+        nextSelector() {
+            currSelector.next();
+            domTree = currSelector.getDOM();
         },
 
-        prevSelector(){
-            toggled(position--);
-            domTree = DOMTree(selectors[position]);
-            buttons();
-            environment();
+        prevSelector() {
+            currSelector.prev();
+            domTree = currSelector.getDOM();
         },
 
-        topSelector(){
-            domTree = DOMTree(domTree.parent);    
-            environment();
+        topSelector() { 
+            currSelector.turnOffButtons();
+            domTree = domTree.elements('parent');
+            domTree.class();
         },
 
-        buttomSelector(){
-            domTree = DOMTree(domTree.child);    
-            environment();
+        buttomSelector() { 
+            currSelector.turnOffButtons();
+            domTree = domTree.elements('child');
+            domTree.class();  
         },
 
-        leftSelector(){
-            domTree = DOMTree(domTree.prevSibling);
-            environment();
+        leftSelector() { 
+            currSelector.turnOffButtons();
+            domTree = domTree.elements('psibling');
+            domTree.class();
         },
 
-        rightSelector(){     
-            domTree = DOMTree(domTree.nextSibling);
-            environment(); 
+        rightSelector(){
+            currSelector.turnOffButtons();
+            domTree = domTree.elements('nsibling');
+            domTree.class();    
         },
     }
 }

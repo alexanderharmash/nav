@@ -1,7 +1,11 @@
 export function View(Elements){
     return {
-        toggleHighlight(selector){
-            selector.classList.toggle('finded');
+        addClassToSelector(selector){
+            selector.classList.add('finded');
+        },
+
+        removeClassFromSelector(selector){
+            selector.classList.remove('finded');
         },
 
         selectorNext(disabled){
