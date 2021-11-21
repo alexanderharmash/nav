@@ -1,14 +1,16 @@
 function DOMTree (current, View) {
     
-    const parent = current.parentElement;
-    const child = current.firstElementChild;
-    const psibling = current.previousElementSibling;
-    const nsibling = current.nextElementSibling;
-    
-    View.navigationTop(parent ? false : true);
-    View.navigationBottom(child ? false : true);
-    View.navigationLeft(psibling ? false : true);
-    View.navigationRight(nsibling ? false : true);
+    let parent = current.parentElement;
+    let child = current.firstElementChild;
+    let psibling = current.previousElementSibling;
+    let nsibling = current.nextElementSibling;
+
+    if (parent instanceof HTMLBodyElement) parent = null;
+
+    View.navigationTopDisabled(parent ? false : true);
+    View.navigationBottomDisabled(child ? false : true);
+    View.navigationLeftDisabled(psibling ? false : true);
+    View.navigationRightDisabled(nsibling ? false : true);
 
     return {
         parent: parent,
@@ -16,7 +18,7 @@ function DOMTree (current, View) {
         psibling: psibling,
         nsibling: nsibling,
 
-        class(){
+        addClass(){
             View.addClassToSelector(current);
         },
         
@@ -25,7 +27,7 @@ function DOMTree (current, View) {
             return new DOMTree(this[element], View);
         },
 
-        clear(){
+        removeClass(){
             View.removeClassFromSelector(current);
         },
     }; 
@@ -39,15 +41,15 @@ function Selectors(View){
         let length = selectors.length;
 
         if (length && position != length - 1){
-            View.selectorNext(false);
+            View.selectorNextDisabled(false);
         }else{
-            View.selectorNext(true);
+            View.selectorNextDisabled(true);
         }
         
         if (position > 0){
-            View.selectorPrev(false);
+            View.selectorPrevDisabled(false);
         }else{
-            View.selectorPrev(true);
+            View.selectorPrevDisabled(true);
         }
     }
 
@@ -55,11 +57,11 @@ function Selectors(View){
         newRequest(request){
             if(request){
                 selectors = document.querySelectorAll(request);
+            
+                View.addClassToSelector(selectors[position]);
+
+                buttons();
             }
-
-            View.addClassToSelector(selectors[position]);
-
-            buttons();
         },
 
         next(){
@@ -93,11 +95,11 @@ function Selectors(View){
         },
 
         turnOffButtons(){
-            View.selectorPrev(true);
-            View.selectorNext(true);
+            View.selectorPrevDisabled(true);
+            View.selectorNextDisabled(true);
         },
 
-        clear(){
+        removeClass(){
             if(selectors.length){
                 View.removeClassFromSelector(selectors[position]);
             }
@@ -107,55 +109,57 @@ function Selectors(View){
 
 export function Seach(View){
     
-    let currSelector = new Selectors(View);
+    let selectors;
     let domTree;
 
     return{
         handleSelectors(request) {
-            currSelector.clear();
-
-            if(domTree){
-                domTree.clear();
+            if(selectors){
+                selectors.removeClass();
             }
 
-            currSelector = new Selectors(View);
-            currSelector.newRequest(request);
+            if(domTree){
+                domTree.removeClass();
+            }
 
-            domTree = currSelector.getDOM();   
+            selectors = new Selectors(View);
+            selectors.newRequest(request);
+
+            domTree = selectors.getDOM();   
         },
 
         nextSelector() {
-            currSelector.next();
-            domTree = currSelector.getDOM();
+            selectors.next();
+            domTree = selectors.getDOM();
         },
 
         prevSelector() {
-            currSelector.prev();
-            domTree = currSelector.getDOM();
+            selectors.prev();
+            domTree = selectors.getDOM();
         },
 
         topSelector() { 
-            currSelector.turnOffButtons();
+            selectors.turnOffButtons();
             domTree = domTree.elements('parent');
-            domTree.class();
+            domTree.addClass();
         },
 
         buttomSelector() { 
-            currSelector.turnOffButtons();
+            selectors.turnOffButtons();
             domTree = domTree.elements('child');
-            domTree.class();  
+            domTree.addClass();  
         },
 
         leftSelector() { 
-            currSelector.turnOffButtons();
+            selectors.turnOffButtons();
             domTree = domTree.elements('psibling');
-            domTree.class();
+            domTree.addClass();
         },
 
         rightSelector(){
-            currSelector.turnOffButtons();
+            selectors.turnOffButtons();
             domTree = domTree.elements('nsibling');
-            domTree.class();    
+            domTree.addClass();    
         },
     }
 }

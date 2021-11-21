@@ -8,27 +8,27 @@ export function View(Elements){
             selector.classList.remove('finded');
         },
 
-        selectorNext(disabled){
+        selectorNextDisabled(disabled){
             Elements.selectorNext.disabled = disabled;
         },
 
-        selectorPrev(disabled){
+        selectorPrevDisabled(disabled){
             Elements.selectorPrev.disabled = disabled;
         },
         
-        navigationTop(disabled){
+        navigationTopDisabled(disabled){
             Elements.navigationTop.disabled = disabled;
         },
 
-        navigationBottom(disabled){
+        navigationBottomDisabled(disabled){
             Elements.navigationBottom.disabled = disabled;
         },
 
-        navigationLeft(disabled){
+        navigationLeftDisabled(disabled){
             Elements.navigationLeft.disabled = disabled;
         },
 
-        navigationRight(disabled){
+        navigationRightDisabled(disabled){
             Elements.navigationRight.disabled = disabled;
         },
     }
